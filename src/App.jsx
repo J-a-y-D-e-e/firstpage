@@ -190,7 +190,7 @@ export default function App() {
   })
 
   return (
-    <div className="h-screen w-screen overflow-auto bg-[#111127] text-white">
+    <div className="min-h-screen w-full bg-[#111127] text-white">
       <canvas id="particleCanvas" className="fixed inset-0 pointer-events-none" />
       
       <div className="relative z-10">
