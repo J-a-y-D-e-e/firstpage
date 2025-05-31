@@ -36,41 +36,153 @@ function CountdownTimer({ initialTime }) {
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Generate stable star positions that don't change on re-render
-  const stableStars = useMemo(() => {
-    return Array.from({ length: 50 }).map(() => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 3}s`,
-    }))
-  }, [])
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.textContent = `
+      document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById("particleCanvas");
+        if (!canvas) {
+          console.error("Canvas element not found!");
+          return;
+        }
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          console.error("Could not get 2D context!");
+          return;
+        }
 
-  // Generate moving twinkling stars for hero section
-  const movingStars = useMemo(() => {
-    return Array.from({ length: 150 }).map((_, i) => {
-      const size = Math.floor(Math.random() * 3) + 1 // 1-3px
-      const left = Math.random() * 100 // 0-100vw
-      const animationDelay = (Math.floor(Math.random() * 100) + 1) / 5 / size - 1000 // delay calculation
-      const animationDuration = (Math.floor(Math.random() * 1800) + 200) / 5 / size // duration calculation
-      const twinkleDelay = (Math.floor(Math.random() * 100) + 1) / 10 - 50 // twinkle delay
-      const twinkleDuration = (Math.floor(Math.random() * 450) + 50) / 10 // twinkle duration
-      const red = Math.floor(Math.random() * 56) + 200 // 200-255
-      const green = Math.floor(Math.random() * 106) + 150 // 150-255
-      const blue = Math.floor(Math.random() * 156) + 100 // 100-255
-      const alpha = (Math.floor(Math.random() * 4) + 7) / 10 // 0.7-1.0
+        let particlesArray = [];
+        const particleColor = "rgba(209, 213, 219, 0.7)";
+        const particleRadius = 1.5;
 
-      return {
-        id: i,
-        size,
-        left: `${left}%`,
-        animationDelay: `${animationDelay}s`,
-        animationDuration: `${animationDuration}s`,
-        twinkleDelay: `${twinkleDelay}s`,
-        twinkleDuration: `${twinkleDuration}s`,
-        backgroundColor: `rgba(${red}, ${green}, ${blue}, ${alpha})`,
-      }
-    })
-  }, [])
+        const mouse = {
+          x: undefined,
+          y: undefined,
+          radius: 100
+        };
+
+        window.addEventListener("mousemove", (event) => {
+          mouse.x = event.clientX;
+          mouse.y = event.clientY;
+        });
+
+        window.addEventListener("mouseout", () => {
+          mouse.x = undefined;
+          mouse.y = undefined;
+        });
+
+        class Particle {
+          constructor(x, y) {
+            this.x = x;
+            this.y = y;
+            this.baseX = this.x;
+            this.baseY = this.y;
+            this.density = Math.random() * 15 + 5;
+            this.size = particleRadius;
+            this.color = particleColor;
+            this.driftVx = (Math.random() - 0.5) * 0.15;
+            this.driftVy = (Math.random() - 0.5) * 0.15;
+            this.vx = this.driftVx;
+            this.vy = this.driftVy;
+          }
+
+          draw() {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          update() {
+            this.baseX += this.driftVx;
+            this.baseY += this.driftVy;
+
+            if (this.baseX <= 0 || this.baseX >= canvas.width) {
+              this.driftVx *= -1;
+              this.baseX += this.driftVx * 2;
+            }
+            if (this.baseY <= 0 || this.baseY >= canvas.height) {
+              this.driftVy *= -1;
+              this.baseY += this.driftVy * 2;
+            }
+
+            let repulsionForceX = 0;
+            let repulsionForceY = 0;
+            let isMouseActive = mouse.x !== undefined && mouse.y !== undefined;
+
+            if (isMouseActive) {
+              let dx = mouse.x - this.x;
+              let dy = mouse.y - this.y;
+              let distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < mouse.radius) {
+                const force = (mouse.radius - distance) / mouse.radius;
+                const angle = Math.atan2(dy, dx);
+                repulsionForceX = -Math.cos(angle) * force * this.density * 0.3;
+                repulsionForceY = -Math.sin(angle) * force * this.density * 0.3;
+              }
+            }
+
+            const returnSpeed = 0.08;
+            let returnForceX = (this.baseX - this.x) * returnSpeed;
+            let returnForceY = (this.baseY - this.y) * returnSpeed;
+
+            this.vx = returnForceX + repulsionForceX + this.driftVx;
+            this.vy = returnForceY + repulsionForceY + this.driftVy;
+
+            this.x += this.vx;
+            this.y += this.vy;
+
+            this.x = Math.max(this.size, Math.min(canvas.width - this.size, this.x));
+            this.y = Math.max(this.size, Math.min(canvas.height - this.size, this.y));
+          }
+        }
+
+        function init() {
+          particlesArray = [];
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          const count = calculateParticleCount();
+
+          for (let i = 0; i < count; i++) {
+            let x = Math.random() * canvas.width;
+            let y = Math.random() * canvas.height;
+            particlesArray.push(new Particle(x, y));
+          }
+        }
+
+        function calculateParticleCount() {
+          const area = window.innerWidth * window.innerHeight;
+          const calculatedCount = Math.floor(area / 3500);
+          return Math.max(80, Math.min(350, calculatedCount));
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (let i = 0; i < particlesArray.length; i++) {
+            if (particlesArray[i]) {
+              particlesArray[i].update();
+              particlesArray[i].draw();
+            }
+          }
+          requestAnimationFrame(animate);
+        }
+
+        let resizeTimeout;
+        window.addEventListener("resize", () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            init();
+          }, 250);
+        });
+
+        init();
+        animate();
+      });
+    `;
+    document.body.appendChild(script);
+  }, []);
 
   const memecoins = Array(9).fill({
     name: "Flappy Bird",
@@ -83,21 +195,9 @@ export default function App() {
   })
 
   return (
-    <div className="min-h-screen bg-[#000025] text-white relative overflow-hidden">
-      {/* Stars Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        {stableStars.map((star, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full opacity-60"
-            style={{
-              left: star.left,
-              top: star.top,
-              animationDelay: star.delay,
-            }}
-          />
-        ))}
-      </div>
+    <div className="min-h-screen bg-[#111127] text-white relative overflow-hidden">
+      {/* Particle Canvas */}
+      <canvas id="particleCanvas" className="absolute inset-0 z-0" />
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-6 bg-[#132043]">
@@ -151,34 +251,7 @@ export default function App() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 text-center py-16 px-6 overflow-hidden">
-        {/* Twinkling Moving Stars for Hero Section */}
-        <div className="absolute inset-0 overflow-hidden z-0">
-          {movingStars.map((star) => (
-            <div
-              key={star.id}
-              className="moving-star-container"
-              style={{
-                width: `${star.size}px`,
-                height: `${star.size}px`,
-                left: star.left,
-                animationDelay: star.animationDelay,
-                animationDuration: star.animationDuration,
-              }}
-            >
-              <div
-                className="moving-star"
-                style={{
-                  width: "inherit",
-                  height: "inherit",
-                  animationDelay: star.twinkleDelay,
-                  animationDuration: star.twinkleDuration,
-                  backgroundColor: star.backgroundColor,
-                }}
-              />
-            </div>
-          ))}
-        </div>
+      <section className="relative z-10 text-center py-16 px-6">
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row items-center justify-between">
             <div className="lg:w-1/2 mb-8 lg:mb-0">
