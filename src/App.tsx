@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search } from "lucide-react"
+import { Search, Globe } from "lucide-react"
 
 function CountdownTimer({ initialTime }: { initialTime: number }) {
   const [timeLeft, setTimeLeft] = useState(initialTime)
@@ -36,7 +36,6 @@ function CountdownTimer({ initialTime }: { initialTime: number }) {
 export default function App() {
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Generate stable star positions that don't change on re-render
   const stableStars = useMemo(() => {
     return Array.from({ length: 50 }).map(() => ({
       left: `${Math.random() * 100}%`,
@@ -45,19 +44,18 @@ export default function App() {
     }))
   }, [])
 
-  // Generate moving twinkling stars for hero section
   const movingStars = useMemo(() => {
     return Array.from({ length: 150 }).map((_, i) => {
-      const size = Math.floor(Math.random() * 3) + 1 // 1-3px
-      const left = Math.random() * 100 // 0-100vw
-      const animationDelay = (Math.floor(Math.random() * 100) + 1) / 5 / size - 1000 // delay calculation
-      const animationDuration = (Math.floor(Math.random() * 1800) + 200) / 5 / size // duration calculation
-      const twinkleDelay = (Math.floor(Math.random() * 100) + 1) / 10 - 50 // twinkle delay
-      const twinkleDuration = (Math.floor(Math.random() * 450) + 50) / 10 // twinkle duration
-      const red = Math.floor(Math.random() * 56) + 200 // 200-255
-      const green = Math.floor(Math.random() * 106) + 150 // 150-255
-      const blue = Math.floor(Math.random() * 156) + 100 // 100-255
-      const alpha = (Math.floor(Math.random() * 4) + 7) / 10 // 0.7-1.0
+      const size = Math.floor(Math.random() * 3) + 1
+      const left = Math.random() * 100
+      const animationDelay = (Math.floor(Math.random() * 100) + 1) / 5 / size - 1000
+      const animationDuration = (Math.floor(Math.random() * 1800) + 200) / 5 / size
+      const twinkleDelay = (Math.floor(Math.random() * 100) + 1) / 10 - 50
+      const twinkleDuration = (Math.floor(Math.random() * 450) + 50) / 10
+      const red = Math.floor(Math.random() * 56) + 200
+      const green = Math.floor(Math.random() * 106) + 150
+      const blue = Math.floor(Math.random() * 156) + 100
+      const alpha = (Math.floor(Math.random() * 4) + 7) / 10
 
       return {
         id: i,
@@ -324,6 +322,13 @@ export default function App() {
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                         </svg>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-[#19c0f4] hover:bg-[#19c0f4]/10 w-8 h-8 transition-colors duration-300"
+                      >
+                        <Globe className="w-4 h-4" />
                       </Button>
                     </div>
                     <CountdownTimer initialTime={Math.floor(Math.random() * 86400) + 3600} />
